@@ -28,5 +28,6 @@ func main() {
 		})
 		wg.Wait()
 	})
+	log.Println("Listening on " + gxiListen)
 	log.Fatal(http.ListenAndServe(gxiListen, nil))
 }
