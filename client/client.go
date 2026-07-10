@@ -48,6 +48,7 @@ func listen(netAddr string, httpPath string, listener net.Listener, roundTripper
 		}
 		go func(){
 			defer localConn.Close()
+			log.Println("Accepted " + localConn.LocalAddr().String())
 			pr, pw := io.Pipe()
 			req, err := http.NewRequest(http.MethodPost, remoteUrl, pr)
 			if err != nil {
