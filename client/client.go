@@ -81,6 +81,7 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
+	defer listener.Close()
 	roundTripperCloser, err := dialUtlsHttp2(netAddr)
 	if err != nil {
 		log.Panicln(err)
