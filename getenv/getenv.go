@@ -8,7 +8,7 @@ import (
 func GetEnvOrPanic(name string) string {
 	value, ok := os.LookupEnv(name)
 	if !ok {
-		log.Panicln("Environment variable " + value + " not present")
+		log.Panicln("Environment variable " + name + " not present")
 	}
 	return value
 }
