@@ -19,8 +19,8 @@ type roundTripperCloserType interface {
 	io.Closer
 }
 
-func dialUtlsHttp2(netAddr string) (roundTripperCloserType, error) {
-	tcpConn, err := net.Dial("tcp", netAddr)
+func dialUtlsHttp2(netAddr string, gxiSendPort string) (roundTripperCloserType, error) {
+	tcpConn, err := net.Dial("tcp", netAddr + ":" + gxiSendPort)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +75,7 @@ func listen(netAddr string, httpPath string, listener net.Listener, roundTripper
 
 func main() {
 	gxiListen := getenv.GetEnvOrDefault("GXI_LISTEN", "127.0.0.1:1080")
+	gxiSendPort := getenv.GetEnvOrDefault("GXI_SEND_PORT", "443")
 	gxiSendPointer := getenv.GetEnvOrPanic("GXI_SEND")
 	netAddr, httpPath := parseGxiPointer(gxiSendPointer)
 	listener, err := net.Listen("tcp", gxiListen)
@@ -82,7 +83,7 @@ func main() {
 		log.Panicln(err)
 	}
 	defer listener.Close()
-	roundTripperCloser, err := dialUtlsHttp2(netAddr)
+	roundTripperCloser, err := dialUtlsHttp2(netAddr, gxiSendPort)
 	if err != nil {
 		log.Panicln(err)
 	}
