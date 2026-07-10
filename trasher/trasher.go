@@ -61,7 +61,7 @@ func Dirty(in io.Reader, out io.Writer) {
 		if err != nil {
 			return
 		}
-		trashRatio := minTrashRatio + math.Pow(rand.Float64(), 1/targetTrashRatio - 1) * (maxTrashRatio - minTrashRatio)
+		trashRatio := minTrashRatio + math.Pow(rand.Float64(), 1/(targetTrashRatio - minTrashRatio) - 1) * (maxTrashRatio - minTrashRatio)
 		trashSize := uint(trashRatio * float64(n))
 		err = writeChunk(out, buf[:trashSize])
 		if err != nil {
