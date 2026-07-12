@@ -14,9 +14,37 @@ import (
 	"golang.org/x/net/http2"
 )
 
+type restartingHttp2ClientConnType struct {
+	roundTripperCloserType
+	mutex sync.Mutex
+	netAddr string
+	gxiSendPort string
+}
+
 type roundTripperCloserType interface {
 	http.RoundTripper
 	io.Closer
+}
+
+func (c *restartingHttp2ClientConnType) RoundTrip(req *http.Request) (*http.Response, error) {
+	firstTime := true
+	for {
+		resp, err := c.roundTripperCloserType.RoundTrip(req)
+		if err != nil && firstTime {
+			if err.Error() == "http2: client conn not usable" || err.Error() == "http2: client conn could not be established" {
+				c.Close()
+				c.mutex.Lock()
+				c.roundTripperCloserType, err = dialUtlsHttp2(c.netAddr, c.gxiSendPort)
+				if err != nil {
+					return nil, err
+				}
+				c.mutex.Unlock()
+				firstTime = false
+				continue
+			}
+		}
+		return resp, err
+	}
 }
 
 func dialUtlsHttp2(netAddr string, gxiSendPort string) (roundTripperCloserType, error) {
@@ -48,7 +76,6 @@ func listen(netAddr string, httpPath string, listener net.Listener, roundTripper
 		}
 		go func(){
 			defer localConn.Close()
-			log.Println("Accepted " + localConn.LocalAddr().String())
 			pr, pw := io.Pipe()
 			req, err := http.NewRequest(http.MethodPost, remoteUrl, pr)
 			if err != nil {
