@@ -15,8 +15,7 @@ func readChunk(in io.Reader, buf []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	n, err := io.ReadFull(in, buf)
-	return n, err
+	return io.ReadFull(in, buf[:chunkSize])
 }
 
 func Clean(in io.Reader, out io.Writer) {

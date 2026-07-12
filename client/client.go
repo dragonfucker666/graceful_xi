@@ -48,13 +48,12 @@ func listen(netAddr string, httpPath string, listener net.Listener, roundTripper
 		}
 		go func(){
 			defer localConn.Close()
-			pr, pw := io.Pipe()
+			pr, remoteWriter := io.Pipe()
 			req, err := http.NewRequest(http.MethodPost, remoteUrl, pr)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			remoteWriter := pw
 			resp, err := roundTripper.RoundTrip(req)
 			if err != nil {
 				log.Println(err)
@@ -64,9 +63,11 @@ func listen(netAddr string, httpPath string, listener net.Listener, roundTripper
 			wg := sync.WaitGroup{}
 			wg.Go(func() {
 				trasher.Dirty(localConn, remoteWriter)
+				remoteWriter.Close()
 			})
 			wg.Go(func() {
 				trasher.Clean(remoteReader, localConn)
+				localConn.Close()
 			})
 			wg.Wait()
 		}()
